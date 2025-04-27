@@ -1,0 +1,37 @@
+####Import Python Libraries
+
+#essentials
+import pandas as pd
+#for plots
+import matplotlib.pyplot as plt
+import seaborn as sns
+#essentials
+import os
+#essentials
+from Bio import SeqIO
+#pairwise distances
+import Levenshtein as lv
+#for plots
+import plotly.express as px
+#clustering
+from sklearn.manifold import TSNE
+from sklearn.manifold import MDS
+#clustering
+import numpy as np
+#other
+import nbformat
+
+
+#list all files with the DC15-containing PfEMP1 sequences (they should be fasta files), sequences are that of full-length proteins apart from the Acidic Terminal Segment
+fasta_files = [f for f in os.listdir() if f.endswith('ATS.fasta')] # list comprehension
+fasta_files
+
+
+
+
+
+
+
+
+
+
