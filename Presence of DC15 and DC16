@@ -186,3 +186,59 @@ ggplot(dc16uniqgen, aes(x=uniqgen16_count, y=count_count)) +
             vjust = -0.5,                       # Position text above the bars
             color = "blue",                   # Color of the text
             size = 5) 
+
+
+####Code for calculating what proportion of genomes with more than of of a particular domain cassette contain differing domain cassette sequences is below.
+#the below code is an example of how it was used on DC15-containing sequences, it was repeated for DC16-containing sequences (with datafram names chagned as appropriate)
+
+# Load a CSV file into a dataframe and sort by 'Genome'
+dc15uniqgen = pd.read_csv("dc15uniqgen.csv").sort_values(by='Genome')#dataframe of unique DC15-containing genomes with the number of DC15 sequences in each genome (uniqgen_count
+# Merge the dc15uniqgen dataframe with the 'dc' dataframe based on the 'Genome' column
+dc15df = pd.merge(dc15uniqgen, dc, on='Genome', how='right')#see 'DC15 Analysis' for the 'dc' dataframe
+
+# Check the datatype of the 'sequence' column before filling missing values
+print(dc15df['sequence'].dtype)
+# Fill missing values in 'sequence' with an empty string and convert the column to string type
+dc15df['sequence'] = dc15df['sequence'].fillna('').astype(str)
+# Confirm the 'sequence' column is of string type
+print(dc15df['sequence'].dtype)
+print(type(dc15df['sequence'][0]))
+
+# Group the dataframe by 'Genome' and count unique 'sequence' values for each genome
+unique_counts = dc15df.groupby('Genome')['sequence'].nunique()
+# Map the unique counts back to the original dataframe
+dc15df['Unique_Seq_Gen'] = dc15df['Genome'].map(unique_counts)
+
+# Classify whether the number of unique sequences matches the 'uniqgen_count' for each genome
+dc15df['DC_Seq_Variety'] = np.where(dc15df['Unique_Seq_Gen'] == dc15df['uniqgen_count'], 'Varied', 'Not')
+# Save the updated dataframe to a CSV file
+dc15df.to_csv("dc15_genomevariety.csv")
+
+# Count occurrences of 'Varied' and 'Not' in 'DC_Seq_Variety'
+value_counts = dc15df['DC_Seq_Variety'].value_counts()
+print(value_counts)
+# Find genomes where the sequence variety is 'Not' varied
+not_different = dc15df[dc15df['DC_Seq_Variety'] == 'Not']['Genome'].unique()
+print(not_different)
+
+# Print the count of genomes with 'Not' variety and the total unique genomes in the dataframe
+print(len(not_different))
+print(dc15df['Genome'].nunique())
+
+# Add a column for the number of unique sequences per genome
+dc15df['Number_of_Uniq_Seq'] = dc15df.groupby('Genome')['sequence'].transform('nunique')
+
+# Create subsets for genomes where sequence variety is 'Not' and 'Varied'
+dc15_notgroup = dc15df[dc15df['DC_Seq_Variety'] == 'Not'][['Genome', 'uniqgen_count', 'Number_of_Uniq_Seq', 'DC_Seq_Variety']]
+dc15_variedgroup = dc15df[dc15df['DC_Seq_Variety'] == 'Varied'][['Genome', 'uniqgen_count', 'Number_of_Uniq_Seq', 'DC_Seq_Variety']]
+
+# Count the number of 'Varied' groups with 'uniqgen_count' > 1 and add the number of 'Not' groups
+count = (dc15_variedgroup['uniqgen_count'] > 1).sum() + len(dc15_notgroup)
+print("Count of values greater than 1:", count)
+
+# Remove duplicate rows based on 'Genome'
+dc15df_uniq = dc15df.drop_duplicates(subset="Genome")
+# Filter for genomes with 'uniqgen_count' > 1
+dc15_multiple = dc15df_uniq[dc15df_uniq['uniqgen_count'] > 1]
+# Print the count of genomes with 'uniqgen_count' > 1
+print(len(dc15_multiple))
