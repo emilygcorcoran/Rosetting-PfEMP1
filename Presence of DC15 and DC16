@@ -1,0 +1,188 @@
+install.packages("tidyverse")
+library("tidyverse")
+
+setwd("~/Documents/PfEMP1") #replace that which is contained with in " " with the relevant working directory
+getwd()
+
+###load files
+data15 <- read.csv("totaldc15.csv") #metadata file with information pertaining to DC15-containing genomes
+data16 <- read.csv("totaldc16.csv") #metadata file with infromation pertaining to DC16-containing genomes
+allgenomes <- read.csv("all_genomes_metadata_updated.csv") #metadata file pertaining to all genomes, irrespective of whether DC15 or DC16 is present
+
+####Geographical Presence of DCs 15 and 16
+
+###Label the Genomes
+DC15_labelled <- data15 %>%
+  mutate(DomainCasette = "DC15") %>%
+  select(Genome, Continent, Country, DomainCasette)
+
+DC16_labelled <- data16 %>%
+  mutate(DomainCasette = "DC16") %>%
+  select(Genome, Continent, Country, DomainCasette)
+
+DC_combine <- bind_rows(DC15_labelled, DC16_labelled)
+
+###Identify overlaps and unique genomes
+DC_combine_overlap <- DC_combine %>%
+  group_by(Genome, Continent, Country) %>%
+  summarise(
+    Domains = paste(unique(DomainCasette), collapse = ", "),  #list of domain casettes for each genome
+    .groups = "drop"
+  ) %>%
+  mutate(
+    Domain_Cassette = case_when(
+      Domains == "DC15, DC16" ~ "Both",
+      Domains == "DC15" ~ "DC15",
+      Domains == "DC16" ~ "DC16"
+    )
+  )
+
+###summarise total genomes per country
+allgenomesnumber_per_country <- allgenomes %>%
+  group_by(Country) %>%
+  summarise(
+    allgenomesnumber = n(),    #count rows for each country
+    .groups = "drop"
+  )
+
+allgenomesnumber_per_country$country_count <- paste(allgenomesnumber_per_country$Country, allgenomesnumber_per_country$allgenomesnumber, sep = "_") #create x axis tick labels
+allgenomesnumber_per_country <- allgenomesnumber_per_country %>% filter(country_count != "_4") #filter out countries with a too-small sample size 
+
+###add total genomes per country as a column and calculate proportions for each domain cassette
+DC_proportions_cleaned <- DC_combine_overlap %>%
+  group_by(Continent, Country, Domain_Cassette) %>%
+  summarise(
+    count = n(),   #count genomes in each domain cassette
+    .groups = "drop"
+  ) %>%
+  left_join(allgenomesnumber_per_country, by = "Country") %>% #join with total genomes per country
+  mutate(
+    Proportion = (count / allgenomesnumber) * 100 # proportion per DC
+  )
+
+###filter countries with sufficient total genomes
+DC_proportions_filtered <- DC_proportions_cleaned %>%
+  filter(allgenomesnumber >= 20)
+
+###Create a Dataset that Shows the Proportions of Total Genomes from Each Country that Contain DC15 or DC16 or Both or Neither (DC15DC16_Both_Neither)
+
+# Step 1: Create a reference for each country with the sum of Proportion where Domain_Cassette is "Both", "DC15", or "DC16"
+country_sums <- DC_proportions_filtered %>%
+  filter(Domain_Cassette %in% c("Both", "DC15", "DC16")) %>%
+  group_by(Country) %>%
+  summarise(sum_proportion = sum(Proportion, na.rm = TRUE), .groups = "drop")
+
+# Step 2: Create a reference for the Continent values for each Country
+country_continent <- DC_proportions_filtered %>%
+  group_by(Country) %>%
+  summarise(Continent = first(Continent), .groups = "drop")
+
+# Step 3: Combine both the sum of Proportions and the Continent information
+df_new_rows <- country_sums %>%
+  left_join(country_continent, by = "Country") %>%
+  mutate(Proportion = 100 - sum_proportion) %>%
+  select(Country, Proportion, Continent)
+
+# Step 4 
+df_new_rows$Domain_Cassette <- "Neither" # Add a label for Domain_Cassette
+
+# Step 5: Add these new rows to the original dataframe
+DC15DC16_Both_Neither <- bind_rows(DC_proportions_filtered, df_new_rows)
+
+# Step 6: add the column to show the country_samplesize
+DC15DC16_Both_Neither <- merge(DC15DC16_Both_Neither, 
+                               allgenomesnumber_per_country[, c("Country", "country_count")], 
+                               by = "Country", 
+                               all.x = TRUE)
+
+# Create the stacked bar graph showing proportion of genomes across different countries and continents that have DC15 or DC16 or both or neither
+ggplot(DC15DC16_Both_Neither, aes(x=Country, y=Proportion, fill=Domain_Cassette)) +
+  geom_bar(stat = "identity", position = "stack") +  # stacked bar chart
+  theme_minimal() +
+  scale_fill_brewer(palette = "Set3") +
+  labs(
+    title = "Proportions of DC15/DC16 Genomes in Overall Data",
+    x = "Country",
+    y = "Proportion (%)",
+    fill = "Domain Cassette"
+  ) +
+  theme(
+    axis.text.x = element_text(angle=45, hjust = 1, size=12),        # X-axis tick label size
+    axis.text.y = element_text(size=12),                              # Y-axis tick label size
+    axis.title.x = element_text(size=14),                             # X-axis title size
+    axis.title.y = element_text(size=14),                             # Y-axis title size
+    plot.title = element_text(size=16, face="bold"),     # Title size and alignment
+    legend.title = element_text(size=13),                             # Legend title size
+    legend.text = element_text(size=11),                              # Legend label size
+    legend.position = "right"
+  ) +
+  scale_x_discrete(labels = setNames(DC15DC16_Both_Neither$country_count.y, DC15DC16_Both_Neither$Country)) +  
+  facet_grid(. ~ Continent, scales = "free_x", space = "free_x")
+
+
+####"Per-Genome" Presence of DCs 15 and 16
+  #the code for the below two plots are preliminary to Figure 3b in my report where the information is combined into one stacked bar graph
+
+##create a bar graph showing the number of times different quantities of DC15 are present in genomes
+data15gen_count <- data15 %>%
+  mutate(count_genome = ave(Genome, Genome, FUN = length))%>%
+  mutate(total = nrow(data15))%>%
+  select(Genome, count_genome, total, Continent, Country, Region, Subtype)
+
+dc15uniqgen <- data15gen_count %>%
+  select(Genome, count_genome, total, Continent, Country, Region, Subtype) %>%
+  group_by(Genome) %>%
+  summarize(
+    uniqgen_count = first(count_genome), # Assumes the associated value is the same for each unique value
+    subtype_list = paste(Subtype, collapse = ", ")  # Creates a list of values for the unique value
+  ) %>%
+  filter(!is.na(Genome) & Genome != "") %>%
+  mutate(total = nrow(data15)) %>%
+  mutate(count_count = ave(uniqgen_count, uniqgen_count, FUN = length))
+
+ggplot(dc15uniqgen, aes(x=uniqgen_count, y=count_count)) + 
+  geom_bar(stat = "identity", fill="pink") +
+  theme_test() +
+  xlab("Different Values of the Number of DC15-Counts Per Genome") +
+  ylab("Number of Times Each Count Occurs") +
+  ylim(92,1062) +
+  labs(title="Number of Different DC15-Counts Per Genome") +
+  theme(axis.text.x = element_text(hjust=0.95, vjust=0.95, size=12)) +
+  scale_y_discrete()+
+  theme(axis.text.y = element_blank())+
+  geom_text(aes(label = count_count),                # Add the text labels
+            vjust = -0.5,                       # Position text above the bars
+            color = "blue",                   # Color of the text
+            size = 5)                          # Size of the text
+
+##create a bar graph showing the number of times different quantities of DC16 are present in genomes
+data16gen_count <- data16 %>%
+  mutate(count_genome = ave(Genome, Genome, FUN = length))%>%
+  mutate(total = nrow(data16))%>%
+  select(Genome, count_genome, total, Continent, Country, Region, Subtype)
+
+dc16uniqgen <- data16gen_count %>%
+  select(Genome, count_genome, total, Continent, Country, Region, Subtype) %>%
+  group_by(Genome) %>%
+  summarize(
+    uniqgen16_count = first(count_genome), # Assumes the associated value is the same for each unique value
+    subtype16_list = paste(Subtype, collapse = ", ")  # Creates a list of values for the unique value
+  ) %>%
+  filter(!is.na(Genome) & Genome != "") %>%
+  mutate(total = nrow(data16)) %>%
+  mutate(count_count = ave(uniqgen16_count, uniqgen16_count, FUN = length))
+
+ggplot(dc16uniqgen, aes(x=uniqgen16_count, y=count_count)) + 
+  geom_bar(stat = "identity", fill="pink") +
+  theme_test() +
+  xlab("Different Values of the Number of DC16-Counts Per Genome") +
+  ylab("Number of Times Each Count Occurs") +
+  ylim(0,870) +
+  labs(title="Number of Different DC16-Counts Per Genome") +
+  theme(axis.text.x = element_text(angle=45, hjust=0.95, vjust=0.95, size=12)) +
+  scale_y_discrete()+
+  theme(axis.text.y = element_blank())+
+  geom_text(aes(label = count_count),                # Add the text labels
+            vjust = -0.5,                       # Position text above the bars
+            color = "blue",                   # Color of the text
+            size = 5) 
