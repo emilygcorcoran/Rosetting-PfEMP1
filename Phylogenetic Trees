@@ -1,5 +1,5 @@
 #set directory
-setwd("~/Documents/PfEMP1/Phylo Trees") #replace that which is within " " with relevant working directory
+setwd(" ") #replace that which is within " " with relevant working directory
 getwd()
 
 install.packages("tidyverse")
