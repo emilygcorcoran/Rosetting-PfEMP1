@@ -1,7 +1,7 @@
 install.packages("tidyverse")
 library("tidyverse")
 
-setwd("~/Documents/PfEMP1") #replace that which is contained with in " " with the relevant working directory
+setwd(" ") #replace that which is contained with in " " with the relevant working directory
 getwd()
 
 ###load files
