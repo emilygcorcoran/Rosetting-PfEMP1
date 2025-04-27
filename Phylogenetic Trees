@@ -1,0 +1,199 @@
+#set directory
+setwd("~/Documents/PfEMP1/Phylo Trees") #replace that which is within " " with relevant working directory
+getwd()
+
+install.packages("tidyverse")
+
+# Install ggtree
+if (!require("BiocManager", quietly = TRUE))
+  install.packages("BiocManager")
+
+BiocManager::install("treeio")
+BiocManager::install("ggtreeExtra")
+BiocManager::install("phyloseq")
+
+install.packages("remotes")
+remotes::install_github("YuLab-SMU/ggtree")
+
+###load packages, must do each time RStudio is opened
+library(tidyverse) #select() #separate() #mutate() #%>% #gather()
+library("ape") #read.tree()
+library("ggtree") #ggtree()
+library(ggtreeExtra)
+library(treeio) #read.newick()
+library(tidytree)
+library(ggnewscale)
+
+
+#### make tree for full length sequences -----------------------------------------------------------------
+  #the below was conducted for each of VAR2CSA sequences, DC15-containing PfEMP1 sequences, CIDRg6 sequneces and DBLg18 sequences
+
+#upload previously generated "treefile"
+pfemp1_v2tree <-
+  read.newick(
+    "VAR2CSA.aligned.fasta.treefile") #insert the name of the preliminary file for relevant sequences
+
+#upload metadata
+geoV2 <- read.csv("var2csa_uniqgen.csv") #insert name of metadata file for relevant sequences
+
+geoV2 <- geoV2 %>%
+  distinct(sequence_id, .keep_all = TRUE)
+
+#create a dataframe based on the tree (giving tip labels, branch lengths, nodes, bootstrap values)
+df_v2tree <- tidytree::as_tibble(pfemp1_v2tree) #find midpoint of tree here, where "branch.length" = 0
+
+#make a few changes: sort by label, remove bootstrap values 
+df_v2tree_sorted <-
+  df_v2tree %>%
+  arrange(label) %>%
+  filter(is.na(as.numeric(label)) & label != "") #might give a warning but that's okay
+
+#pull out metadata columns of interest
+geo_v2selected <- 
+  geoV2 %>%
+  select(sequence_id,Region, Country, Continent) %>%
+  arrange(sequence_id)%>%
+  mutate(label = df_v2tree_sorted$label) 
+
+#test if Sample_ID and label match
+test15_if_labels_match <- 
+  geo_v2selected %>%
+  select(sequence_id, label) %>%
+  mutate(test = ifelse(sequence_id == label, "match", "mismatch")) %>%
+  arrange(desc(test))
+
+#modify mismatches (either manually or in R), then go back and check test_if_labels_match again
+geo_15selected <- 
+  geo_15selected %>%
+  mutate(sequence_id = ifelse(sequence_id == "11019var1_exon1_aa","11019var1_aa", sequence_id))
+
+#if everything matches, merge the dataframes into one
+df_v2tree_geo <-
+  df_v2tree_sorted %>%
+  merge(geo_v2selected, by = "label", all = TRUE)
+
+
+# make a simple tree -----------------------------------------------------------------
+
+#generate dictionaries of colours for continents and countries
+continent_colours <- c(
+  "Africa" = "#a7c9e3",
+  "Asia" = "#f6c9d3",
+  "South_America" = "#a8d8b9",
+  "S.America" = "#a8d8b9"
+)
+
+country_colours <- c(
+  "Bangladesh" = "#8A8A8A",
+  "Burkina Faso" = "#D9BF77",
+  "Cambodia" = "#D1A9D6",
+  "Cameroon" = "#1B9A4D",
+  "Columbia" = "#5E7A9E",
+  "Congo DR" = "#F39B4F",
+  "DRC" = "#F39B4F",
+  "Gambia" = "#7E7E7E",
+  "Gabon" = "#9D7F2B",
+  "Ghana" = "#F6D8C6",
+  "Guinea" = "#B9D8A3",
+  "Honduras" = "#C2D5D4",
+  "Kenya" = "#D53E20",
+  "Laos" = "#85C7E7",
+  "Madagascar" = "#F1A7B3",
+  "Malawi" = "#F9E442",
+  "Mali" = "#CC79A7",
+  "Myanmar" = "#009E73",
+  "Nigeria" = "#B6D3E8",
+  "Papua New Guinea" = "#E69F00",
+  "Peru" = "#002E49",
+  "SE_Asia" = "#F5E999",
+  "Senegal" = "#BAA2C0",
+  "Sudan" = "#0072B2",
+  "Tanzania" = "#7E4B7E",
+  "Thailand" = "#5E8C6E",
+  "Uganda" = "#D55E00",
+  "Viet Nam" = "#56B4E9",
+  "Vietnam" = "#56B4E9",
+  " " = "#FF6F61"
+)
+
+#generate tree
+phyloV2 <- 
+  ggtree(pfemp1_v2tree, layout = "rectangular")
+
+phyloV2
+
+#look at node numbers
+phyloV2 + geom_text(aes(label = node), size = 4) # add node numbers
+
+#make adjustments and set midpoint (see line 44)
+adj_v2phylo <- 
+  viewClade(phyloV2, node=1366, xmax_adjust = 2) 
+
+adj_v2phylo              
+
+# add metadata -----------------------------------------------------------------
+
+adj_v2phylo + 
+  geom_treescale(x=0.2, y=1300, fontsize = 10, linesize = 2.5, offset = 10)+ #add scale and adjust appearance
+  #geom_nodelab(size = 1.5, hjust = .05)+ #add bootstrap values, remove the "#" at the beginning of the line to include in the plot
+  geom_tiplab(align = T, linesize = 0.05, size = 0.5) +#add sample names
+  
+  ##heatmaps
+  
+  new_scale_fill() +
+  
+  geom_fruit(
+    data=df_v2tree_geo, #set the metadata df
+    geom=geom_tile,
+    mapping = aes(
+      y=label, 
+      x="",
+      fill = Country, #set variable to use for heatmap
+      width = 0.4 #how narrow/wide is the heatmap?
+    ),
+    offset = 0.175, #how far apart is the heatmap from the tree?
+    pwidth = 0.4, #how narrow/wide is the heatmap?
+    
+    #leave this as it is (keeps the heatmap in position)
+    grid.params=list(alpha = 0),
+    position = position_identityx(hexpand = 2.1)) +
+  
+  #Apply the custom color scale for Subtype
+  scale_fill_manual(values = country_colours) +
+  
+  #customise legend
+  labs(fill = "Country") + #name your legend
+  theme(
+    legend.title = element_text(size = 9), #change font size
+    legend.text = element_text(size = 7),#change font size
+    legend.key.size = unit(0.8, "lines")) +
+  
+  #add another layer
+  new_scale_fill() +
+  
+  geom_fruit(
+    data=df_v2tree_geo, #set the metadata df
+    geom=geom_tile,
+    mapping = aes(
+      y=label, 
+      x="",
+      fill = Continent, #set variable to use for heatmap
+      width = 0.4 #how narrow/wide is the heatmap?
+    ),
+    offset = 0.35, #how far apart is the heatmap from the tree?
+    pwidth = 0.4, #how narrow/wide is the heatmap?
+    
+    # hide grid lines in rectangular grids
+    grid.params=list(alpha = 0),
+    position = position_identityx(hexpand = 2.1)) +
+  
+  # Apply the custom color scale for Country
+  scale_fill_manual(values = continent_colours) +
+  
+  #customise legend
+  labs(fill = "Continent") + #name your legend
+  theme(
+    legend.title = element_text(size = 9), #change font size
+    legend.text = element_text(size = 7),    # Change font size of the legend text
+    legend.key.size = unit(0.8, "lines"))     # Adjust the size of the legend keys (color blocks)
+
