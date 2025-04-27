@@ -1,0 +1,150 @@
+####Box Plot Values - the below code was conducted for each of VAR2CSA sequences, DC15-containing sequences, DC16-containing sequences
+  #this code was also conducted for DBLa1.2, CIDRa1.5, DBLb6, DBLa1.5, DBLa1.6, CIDRg6, DBLg18 and DBLz2 sequences.
+  #the "lev_matrix" was replaced with the relevant Levenshtein matrix name, as suitable
+  #the boundary values at which a Levenshtein value was considered an outlier was calculated as >(1.5x(Q3-Q1))+Q3 or <Q1-(1.5x(Q3-Q1))
+  #if boundary values fell within the range set by the minimum and maximum (as calculated below), then the boundary values were then set as the new min and max
+  #if boundary values fell outwith the range set by the minimum and maximum (as calculated below), then the boundary values were not used as the min and max
+  
+# This mask selects the upper triangle of the matrix, excluding the diagonal
+mask = np.triu(np.ones(lev_matrix.shape), k=1).astype(bool)
+# Apply the mask
+upper_tri = lev_matrix.where(mask)
+# Flatten to a 1D array, dropping NaNs (from the lower triangle and diagonal)
+unique_dists = upper_tri.stack().values
+minimum = np.min(unique_dists)
+q1 = np.percentile(unique_dists, 25)
+median = np.median(unique_dists)
+q3 = np.percentile(unique_dists, 75)
+maximum = np.max(unique_dists)
+print(f"Min: {minimum}")
+print(f"Q1: {q1}")
+print(f"Median: {median}")
+print(f"Q3: {q3}")
+print(f"Max: {maximum}")
+
+
+####Supplementary Figure 1 - Full-Length PfEMP1 Sequence Levenshtein Matrix Values
+
+# Each list below is: [min, Q1, median, Q3, max], replace values as necessary
+box_data = [
+    [324.5, 542, 604, 687, 904.5],
+    [1221.5, 1754, 1939, 2109, 2641.5],
+    [861.5, 1532, 1753, 1979, 2649.5]
+]
+# Convert each 5-number summary into a dict format that matplotlib expects
+box_plot_data = []
+for stats, label in zip(box_data, labels):
+    d = {
+        'med': stats[2],
+        'q1': stats[1],
+        'q3': stats[3],
+        'whislo': stats[0],
+        'whishi': stats[4],
+        'fliers': []
+    }
+    box_plot_data.append(d)
+# Labels for the x-axis
+x_labels = ["VAR2CSA", "DC15", "DC16"]
+# Create the plot
+fig, ax = plt.subplots()
+ax.bxp(box_plot_data, showfliers=False, medianprops=dict(color='blue', linewidth=2))
+# Set x-tick positions and labels
+ax.set_xticks(range(1, len(x_labels) + 1))  # Set tick positions
+ax.set_xticklabels(x_labels)  # Set the labels
+# Adjust x-axis tick labels: rotation + vjust & hjust
+for label in ax.get_xticklabels():
+    label.set_rotation(0)  # Set label rotation (angle)
+    label.set_horizontalalignment('center')  # Horizontal alignment ('left', 'center', 'right')
+    label.set_verticalalignment('top')      # Vertical alignment ('top', 'center', 'bottom')
+    label.set_fontsize(8)  # Set font size for the labels (adjust size as needed)
+ax.set_title("Sequence Similarity Between Different PfEMP1 Groups")
+ax.set_xlabel("PfEMP1 Group")
+ax.set_ylabel("Levenshtein Matrix Values")
+plt.tight_layout()
+plt.show()
+
+
+####Supplementary Figure 2 - PfEMP1 Domain Sequence Levenshtein Matrix Values
+
+# Each list below is: [min, Q1, median, Q3, max], replace values as necessary
+box_data = [
+    [115.5, 171, 190, 208, 263.5],
+    [15, 90, 128, 140, 215],
+    [174, 224, 244, 258, 309],
+    [101.5, 151, 168, 184, 233.5],
+    [118.5, 198, 225, 251, 330.5],
+    [0.0, 0.0, 118, 141, 158],
+    [0.0, 0.0, 24, 79, 147.5],
+    [0.0, 66, 253, 282, 316]
+]
+# Define the labels for the x-axis
+x_labels = ["DBLa1.2", "CIDRa1.5", "DBLb6", "DBLa1.5", "DBLa1.6", "CIDRg6", "DBLg18", "DBLz2"]
+# Convert each 5-number summary into a dict format that matplotlib expects
+box_plot_data = []
+for stats in box_data:
+    d = {
+        'med': stats[2],
+        'q1': stats[1],
+        'q3': stats[3],
+        'whislo': stats[0],
+        'whishi': stats[4],
+        'fliers': []  # We are not plotting fliers here, but you can add data if needed
+    }
+    box_plot_data.append(d)
+# Create the plot
+fig, ax = plt.subplots()
+ax.bxp(box_plot_data, showfliers=False, medianprops=dict(color='blue', linewidth=2))
+# Set x-tick positions and labels
+ax.set_xticks(range(1, len(x_labels) + 1))  # Set tick positions
+ax.set_xticklabels(x_labels)  # Set the labels
+# Adjust x-axis tick labels: rotation + vjust & hjust
+for label in ax.get_xticklabels():
+    label.set_rotation(45)  # Set label rotation (angle)
+    label.set_horizontalalignment('center')  # Horizontal alignment ('left', 'center', 'right')
+    label.set_verticalalignment('top')      # Vertical alignment ('top', 'center', 'bottom')
+    label.set_fontsize(8)  # Set font size for the labels (adjust size as needed)
+# Add titles and axis labels
+ax.set_title("Sequence Similarity Between Different PfEMP1 Domains")
+ax.set_xlabel("PfEMP1 Domain")
+ax.set_ylabel("Levenshtein Matrix Values")
+# Adjust layout for better spacing
+plt.tight_layout()
+# Show the plot
+plt.show()
+
+
+####Supplementary Table 1
+
+##Stress
+stress = mds_3d.stress_
+lev_1_2matrix = np.array(lev_1_2matrix)  # Make sure it's a numpy array
+sum_lev_matrix_squared = np.sum(lev_1_2matrix ** 2)
+if sum_lev_matrix_squared == 0:
+    raise ValueError("Sum of squares of lev_matrix is zero, can't divide by zero.")
+stress1 = np.sqrt(stress / (0.5 * sum_lev_matrix_squared))
+print(stress1)
+
+##R-Squared
+
+# Getting the Pearson coefficient and R squared values
+from scipy.stats import pearsonr
+from scipy.spatial.distance import pdist, squareform
+from scipy.stats import linregress
+# Pairwise Euclidean distance for mds_3d.embedding_
+mds_distances = pdist(mds_3d.embedding_)  
+# Pairwise Levenshtein distance (assuming lev_matrix is a NumPy array)
+lev_distances = pdist(lev_1_2matrix)  # Remove .values if lev_matrix is a NumPy array
+# Compute Pearson correlation coefficient (r)
+r, p_value = pearsonr(lev_distances, mds_distances)
+# Calculate R-squared
+r_squared = r ** 2
+# Print results
+print(f"Pearson correlation coefficient: {r:.4f}")
+print(f"P-value: {p_value:.4e}")  # Scientific notation for small values
+print(f"R-squared value: {r_squared:.4f}")
+
+
+####Supplementary Table 2 - Average Branch Lengths
+
+
+
