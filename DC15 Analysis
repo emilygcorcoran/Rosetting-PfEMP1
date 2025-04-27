@@ -123,10 +123,10 @@ domain_df
     filter1_2sub = domain_df[domain_df['sequence_id'].str.contains('DBLa1.2', na=False)]
     filter1_5sub = domain_df[domain_df['sequence_id'].str.contains('CIDRa1.5', na=False)]
     filterb6sub = domain_df[domain_df['sequence_id'].str.contains('DBLb6', na=False)]
+  #Where names below are indicated as containing "1_2", names were replaced, as suitably relevant when conducting for domains CIDRa1.5 and DBLb6
+  #Where names are indicated as "filter1_2sub", names were replaced with "filter1_5sub" or "filterb6sub" as relevant
 
-##DBLa1.2
-filter1_2sub = domain_df[domain_df['sequence_id'].str.contains('DBLa1.2', na=False)]
-filter1_2sub
+##DBLa1.2 Example
 
 #extract sequence info from the table
 sequence_dict = dict(zip(filter1_2sub['sequence_id'], filter1_2sub['sequence'])) #create a dictionary which assigns each sequence to its sequence ID
@@ -191,9 +191,17 @@ fig.update_traces(marker=dict(color='red', size=6))
 # Show the plot
 fig.show()
 
+##The below code it used to calculate the percentage of non duplicate amino acid sequences and proportion made up by the most common sequence
+#The below code was also repeated for CIDRa1.5 and DLBb6 with dataframe names changed as suitable
+#the number of columns of the "merged_1_2df" give the total number of sequences (n)
+#the number of columns of the "identical_seq_1_2df" gives the number of sequences after all duplicates are removed(m)
+#a simple calculation can be used to calculate the "non-duplicate" percentage: (m / n) * 100
+#the most common sequence will be listed first, its "count" value divided by the "n" value (number of columns of "merged_1_2df") and multiplied by 100 gives the proportion made up by the most common sequence
 
-
-
-
+identical_seq_1_2df = merged_1_2df['sequence'].value_counts().reset_index()
+# Rename the columns for clarity
+identical_seq_1_2df.columns = ['sequence', 'count']
+# Display the result
+print(identical_seq_1_2df)
 
 
