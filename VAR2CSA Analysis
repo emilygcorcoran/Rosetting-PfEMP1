@@ -1,4 +1,5 @@
-####import Python Libraries
+####the below code was conducted in Jupyter Notebooks, using Python
+##import Python Libraries
 #essentials
 import pandas as pd
 #for plots
@@ -12,10 +13,7 @@ from Bio import SeqIO
 import Levenshtein as lv
 #other
 import nbformat
-import matplotlib.colors as mcolors
 import plotly.express as px
-import matplotlib.colors as mcolors
-
 
 #list all files containing the VAR2CSA sequences (they should be fasta files)
 fasta_files = [f for f in os.listdir() if f.endswith('.fasta')] # list comprehension
@@ -83,7 +81,3 @@ identical_seq_counts
 # Merge the two DataFrames on the 'sequence' column
 identical_seq_df = pd.merge(identical_seq_counts, df, on='sequence', suffixes=('_df1', '_df2'))
 identical_seq_df
-
-
-
-
