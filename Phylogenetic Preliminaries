@@ -1,5 +1,48 @@
-#create fasta file based on sequences (use merged_df)
+####Prior to Visualising Phylogenetic Trees, the Following Code Must be Run to Generate Information Such as Branch Length etc
+    #All code below was run for VAR2CSA sequences, DC15-containing PfEMP1 sequences, CIDRg6 sequences and DBLg18 sequences (with file names changes as relevant)
 
+
+##The following code creates a fasta file of sequences and sequence IDs that is later submitted to ther server (see below)
+##this code was run in Jupyter Notebooks using Python
+
+#create fasta file based on sequences (use merged_df)
 with open ('CIDRg6.fasta', 'w') as file:
     for seq_id, seq in zip(mds16_g6sub['sequence_id'], mds16_g6sub['sequence']):
         file.write(f'>{seq_id}\n{seq}\n')
+
+
+##The following code submits the previously generated fasta file of sequences to the 'EDDIE' server which then generates a plain-text depiction of the phylogenetic tree
+##The output of this code is then used in RStudio to visualise the tree
+##this code was used in Terminal
+
+#!/bin/bash
+
+# submit this script to Eddie
+
+#$ -cwd
+#$ -l h_rt=48:00:0,h_vmem=24G #we are asking for a 48h time slot and 24GB RAM
+#$ -pe sharedmem 8
+
+# get an email when job is submitted, ended or removed
+#$ -M (insert the email address to which you wish to receive updates regarding the status of the script)
+#$ -m bes
+
+# allow for modules to be loaded (we need this for the packages we're using)
+source /etc/profile.d/modules.sh
+
+# Load modules, i.e. muscle and iqtree
+module load roslin/muscle/5.3
+module load roslin/iqtree/2.4.0
+
+####################
+
+# run the actual code
+
+# give the name of the file you're using
+filename="CIDRg" #remove .fasta ending!
+
+# align sequences
+muscle -align $filename.fasta -output $filename.aligned.fasta
+
+# construct tree
+iqtree2 --safe -s $filename.aligned.fasta -m JTT+F+I+I+R10 -alrt 1000 -nt 8
