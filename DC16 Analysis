@@ -1,4 +1,5 @@
-####Import Python Libraries
+####The below code was conduted using Python in Jupyter Notebooks
+##Import Python Libraries
 
 #essentials
 import pandas as pd
@@ -14,7 +15,6 @@ import Levenshtein as lv
 #for plots
 import plotly.express as px
 #clustering
-from sklearn.manifold import TSNE
 from sklearn.manifold import MDS
 #clustering
 import numpy as np
@@ -22,9 +22,96 @@ import numpy as np
 import nbformat
 
 
-#list all files with the DC15-containing PfEMP1 sequences (they should be fasta files), sequences are that of full-length proteins apart from the Acidic Terminal Segment
-fasta_files = [f for f in os.listdir() if f.endswith('ATS.fasta')] # list comprehension
-fasta_files
+####Full-Length (no ATS) PfEMP1 Amino Acid Sequence Analysis
+
+#create a table for the DC architecture 
+dc16filterdf = pd.read_csv("dc16filterdf.csv").sort_values(by='sequence_id') 
+#arcdc_df = arcdc_df.rename(columns={'sequence_id'}) #should match the column from start_df
+dc16filterdf #contained sequences with fused and incomplete filtered out
+
+
+###The below analysis was conducted for DC16 sequences that started with DBLa1.5, DBLa1.6-CIDRd and DBLa1.6-CIDRg
+  #Sequences were extracted as such:
+    filter5sub = dc16filterdf[dc16filterdf['Subtype'].str.contains('DBLa1.5', na=False)]
+    filter6d = dc16filterdf[dc16filterdf['Subtype'].str.contains('DBLa1.6-CIDRd', na=False)]
+    filter6g = dc16filterdf[dc16filterdf['Subtype'].str.contains('DBLa1.6-CIDRg', na=False)]
+  #Where names below are indicated as containing "1_2", names were replaced, as suitably relevant when conducting for domains CIDRa1.5 and DBLb6
+  #Where names are indicated as "filter5sub", names were replaced with "filter6d" or "filter6g" as relevant
+
+##filter5sub Example
+
+#extract sequence info from the table
+sequence_dict = dict(zip(filter5sub['sequence_id'], filter5sub['sequence'])) #create a dictionary which assigns each sequence to its sequence ID
+sequence_ids = list(sequence_dict.keys()) #take out sequence IDs
+sequences = list(sequence_dict.values()) #take out sequences
+#create Levenshtein distance matrix
+n = len(sequences)
+lev_5matrix = [[lv.distance(sequences[i], sequences[j]) for j in range(n)] for i in range(n)]
+lev_5matrix=pd.DataFrame(lev_5matrix)
+lev_5matrix
+
+#Plot a clustermap of the Levenshtein distance matrix
+plt.figure(figsize=(8, 6))
+#Set the vmin and vmax to control the color scale range
+sns.clustermap(lev_5matrix, cmap='viridis', vmin=0, vmax=4000)
+#Set the title
+plt.title("Levenshtein Distance Heatmap")
+#Save the figure
+plt.savefig("heatmap_clustered.png")
+#Show the plot
+plt.show()
+
+#Part of the filter5sub Example
+#The below code it used to calculate the percentage of non duplicate amino acid sequences and proportion made up by the most common sequence
+    #The below code was also repeated for DC16 sequences beginning with DBLa1.6-CIDRd and DBLa1.6-CIDRg, with dataframe names changed as suitable
+    #the number of columns of the "identical_seq_5_df" give the total number of sequences (n)
+    #the number of columns of the "identical_seq_5_counts" gives the number of sequences after all duplicates are removed(m)
+    #a simple calculation can be used to calculate the "non-duplicate" percentage: (m / n) * 100
+    #the most common sequence will be listed first, its "count" value divided by the "n" value (number of columns of "merged_1_2df") and multiplied by 100 gives the proportion made up by the most common sequence
+
+identical_seq_5_counts = filter5sub['sequence'].value_counts().reset_index()
+identical_seq_5_counts.columns = ['sequence', 'count']
+identical_seq_5_counts
+# Merge the two DataFrames on the 'sequence' column
+identical_seq_5_df = pd.merge(identical_seq_5_counts, filter5sub, on='sequence', suffixes=('_df1', '_df2'))
+identical_seq_5_df
+
+
+####Domain-Specific Analysis
+
+#list all files with the singular DC16-associated domain sequences (they should be fasta files)
+domain16_fasta = [f for f in os.listdir() if f.endswith('subclasses.fasta')] # list comprehension
+domain16_fasta
+
+#create table with the sequences and their IDs
+all_data_domain = []
+for dseq in domain16_fasta:
+    records = list(SeqIO.parse(dseq, "fasta"))
+    dataseq = {'filename': os.path.basename(dseq),
+            'sequence_id': [record.id for record in records],
+           'sequence': [str(record.seq) for record in records]}
+    all_data_domain.append(pd.DataFrame(dataseq))
+domain16_fasta = pd.concat(all_data_domain, ignore_index=True) #put the table in the correct format
+domain16_fasta = domain16_fasta.sort_values(by='sequence_id') #sort values by sequence ID
+domain16_fasta
+
+###The below analysis was conducted for DBLa1.5, DBLa1.6, CIDRg6, DBLg18 and DBLz2
+  #Sequences were extracted as such:
+    filter16_a15 = domain16_fasta[domain16_fasta['sequence_id'].str.contains('DBLa1.5', na=False)]
+    filter16_a16 = domain16_fasta[domain16_fasta['sequence_id'].str.contains('DBLa1.6', na=False)]
+    filter16_g6 = domain16_fasta[domain16_fasta['sequence_id'].str.contains('CIDRg6', na=False)]
+    filter16_g18 = domain16_fasta[domain16_fasta['sequence_id'].str.contains('DBLg18', na=False)]
+    filter16_z2 = domain16_fasta[domain16_fasta['sequence_id'].str.contains('DBLz2', na=False)]  
+  #Where names below are indicated as containing "1_2", names were replaced, as suitably relevant when conducting for domains CIDRa1.5 and DBLb6
+  #Where names are indicated as "filter1_2sub", names were replaced with "filter1_5sub" or "filterb6sub" as relevant
+
+##DBLa1.5 Example
+
+
+
+
+
+
 
 
 
