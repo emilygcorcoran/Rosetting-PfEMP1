@@ -1,5 +1,7 @@
+##the below code was conducted in RStudio
+
 #set directory
-setwd(" ") #replace that which is within " " with relevant working directory
+setwd(" ") #replace that which is within " " with relevant working directory, keep the double quotation marks
 getwd()
 
 install.packages("tidyverse")
@@ -56,15 +58,15 @@ geo_v2selected <-
   mutate(label = df_v2tree_sorted$label) 
 
 #test if Sample_ID and label match
-test15_if_labels_match <- 
+testv2_if_labels_match <- 
   geo_v2selected %>%
   select(sequence_id, label) %>%
   mutate(test = ifelse(sequence_id == label, "match", "mismatch")) %>%
   arrange(desc(test))
 
 #modify mismatches (either manually or in R), then go back and check test_if_labels_match again
-geo_15selected <- 
-  geo_15selected %>%
+geo_v2selected <- 
+  geo_v2selected %>%
   mutate(sequence_id = ifelse(sequence_id == "11019var1_exon1_aa","11019var1_aa", sequence_id))
 
 #if everything matches, merge the dataframes into one
@@ -79,7 +81,6 @@ df_v2tree_geo <-
 continent_colours <- c(
   "Africa" = "#a7c9e3",
   "Asia" = "#f6c9d3",
-  "South_America" = "#a8d8b9",
   "S.America" = "#a8d8b9"
 )
 
@@ -125,9 +126,9 @@ phyloV2
 #look at node numbers
 phyloV2 + geom_text(aes(label = node), size = 4) # add node numbers
 
-#make adjustments and set midpoint (see line 44)
+#make adjustments and set midpoint
 adj_v2phylo <- 
-  viewClade(phyloV2, node=1366, xmax_adjust = 2) 
+  viewClade(phyloV2, node=1366, xmax_adjust = 2) #node = (insert midpoint here, see line 45)
 
 adj_v2phylo              
 
@@ -196,4 +197,3 @@ adj_v2phylo +
     legend.title = element_text(size = 9), #change font size
     legend.text = element_text(size = 7),    # Change font size of the legend text
     legend.key.size = unit(0.8, "lines"))     # Adjust the size of the legend keys (color blocks)
-
