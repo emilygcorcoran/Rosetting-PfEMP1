@@ -1,7 +1,9 @@
 ####Box Plot Values - the below code was conducted for each of VAR2CSA sequences, DC15-containing sequences, DC16-containing sequences
+  #Conducted in Python After Levenshtein Heatmap Generation, see "VAR2CSA Analysis", "DC15 Analysis" and "DC16 Analysis"
   #this code was also conducted for DBLa1.2, CIDRa1.5, DBLb6, DBLa1.5, DBLa1.6, CIDRg6, DBLg18 and DBLz2 sequences.
   #the "lev_matrix" was replaced with the relevant Levenshtein matrix name, as suitable
-  #the boundary values at which a Levenshtein value was considered an outlier was calculated as >(1.5x(Q3-Q1))+Q3 or <Q1-(1.5x(Q3-Q1))
+  #the 3 Levenshtein matrices for the 3 DC16 subgroups were combined prior to running this code (see "DC16 Analysis")
+  #the boundary values at which a Levenshtein value was considered an outlier was calculated as >(1.5x(Q3-Q1))+Q3 and <Q1-(1.5x(Q3-Q1))
   #if boundary values fell within the range set by the minimum and maximum (as calculated below), then the boundary values were then set as the new min and max
   #if boundary values fell outwith the range set by the minimum and maximum (as calculated below), then the boundary values were not used as the min and max
   
@@ -23,7 +25,8 @@ print(f"Q3: {q3}")
 print(f"Max: {maximum}")
 
 
-####Supplementary Figure 1 - Full-Length PfEMP1 Sequence Levenshtein Matrix Values
+####Supplementary Figure 1 - Full-Length PfEMP1 Sequence Levenshtein Matrix Values 
+  #Conducted in Python After Levenshtein Heatmap Generation, see "VAR2CSA Analysis", "DC15 Analysis" and "DC16 Analysis"
 
 # Each list below is: [min, Q1, median, Q3, max], replace values as necessary
 box_data = [
@@ -64,7 +67,8 @@ plt.tight_layout()
 plt.show()
 
 
-####Supplementary Figure 2 - PfEMP1 Domain Sequence Levenshtein Matrix Values
+####Supplementary Figure 2 - PfEMP1 Domain Sequence Levenshtein Matrix Values 
+  #Conducted in Python After Levenshtein Heatmap Generation, see "DC15 Analysis" and "DC16 Analysis"
 
 # Each list below is: [min, Q1, median, Q3, max], replace values as necessary
 box_data = [
@@ -113,9 +117,15 @@ plt.tight_layout()
 plt.show()
 
 
-####Supplementary Table 1
+####Supplementary Table 1 
+  #Conducted in Python After Levenshtein Heatmap and 3D MDS Plot Generation, see "DC15 Analysis" and "DC16 Analysis"
+  #the below code was conducted for DBLa1.2, CIDRa1.5, DBLb6, DBLa1.5, DBLa1.6, CIDRg6, DBLg18 and DBLz2 sequences.
+  #Where names below are indicated as containing "1_2", names were replaced, as suitably relevant when conducting for other domains
+  #the 3D coordinates must be indicates prior to running the below code - as indicated by "mds_3d" (see "DC15 Analysis")
+  #3D coordinates for all domains cannot be run all at once before running the below code, must run  after the previous domain's stress and r-squared has been calculated
 
 ##Stress
+
 stress = mds_3d.stress_
 lev_1_2matrix = np.array(lev_1_2matrix)  # Make sure it's a numpy array
 sum_lev_matrix_squared = np.sum(lev_1_2matrix ** 2)
@@ -144,7 +154,11 @@ print(f"P-value: {p_value:.4e}")  # Scientific notation for small values
 print(f"R-squared value: {r_squared:.4f}")
 
 
-####Supplementary Table 2 - Average Branch Lengths
+####Supplementary Table 2 - Average Branch Lengths 
+  #Conducted in RStudio After Phylogenetic Tree Generation, see "Phylogenetic Trees"
+  #the below code calculates the average branch length of the specified phylogenetic tree
+  #this was repeated for VAR2CSA sequences, DC15-containing sequences, CIDRg6 sequences and DBLg18 sequences, with the name of the phylogenetic tree adjusted as suitable
 
-
+class(df_v2tree_geo$branch.length)
+print(mean(df_v2tree_geo$branch.length, na.rm = TRUE))
 
