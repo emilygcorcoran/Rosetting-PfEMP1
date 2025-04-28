@@ -103,21 +103,160 @@ domain16_fasta
     filter16_g18 = domain16_fasta[domain16_fasta['sequence_id'].str.contains('DBLg18', na=False)]
     filter16_z2 = domain16_fasta[domain16_fasta['sequence_id'].str.contains('DBLz2', na=False)]  
   #Where names below are indicated as containing "1_2", names were replaced, as suitably relevant when conducting for domains CIDRa1.5 and DBLb6
-  #Where names are indicated as "filter1_2sub", names were replaced with "filter1_5sub" or "filterb6sub" as relevant
+  #Where names are indicated as "filter16_a15", "lev_la5_matrix", "heatmap_1_5clustered", "mds_la5_df" and "merged_la5_df" names were replaced as relevant
 
 ##DBLa1.5 Example
 
+#extract sequence info from the table
+sequence_dict = dict(zip(filter16_a15['sequence_id'], filter16_a15['sequence'])) #create a dictionary which assigns each sequence to its sequence ID
+sequence_ids = list(sequence_dict.keys()) #take out sequence IDs
+sequences = list(sequence_dict.values()) #take out sequences
+#create Levenshtein distance matrix
+n = len(sequences)
+lev_la5_matrix = [[lv.distance(sequences[i], sequences[j]) for j in range(n)] for i in range(n)]
+lev_la5_matrix=pd.DataFrame(lev_la5_matrix)
+lev_la5_matrix
+
+#Plot a clustermap of the Levenshtein distance matrix
+plt.figure(figsize=(8, 6))
+#Set the vmin and vmax to control the color scale range
+sns.clustermap(lev_la5_matrix, cmap='viridis', vmin=0, vmax=400)
+#Set the title
+plt.title("Levenshtein Distance Heatmap")
+#Save the figure
+plt.savefig("heatmap_1_5clustered.png")
+#Show the plot
+plt.show()
+
+#calculate coordinates for 3D MDS plot 
+#this might take a while depending on how many sequences you have
+#create a new table for the MDS coordinates 
+mds_la5_df = pd.DataFrame(filter16_a15['sequence_id']).sort_index() #we'll keep the sequence IDs from the df table
+#3D coordinates
+mds_3d = MDS(n_components=3, random_state=42, dissimilarity='precomputed', n_init = 200, max_iter=500, n_jobs=5) 
+mds_results_3d = mds_3d.fit_transform(lev_la5_matrix)
+mds_la5_df['mds_3d']=mds_results_3d.tolist()
+mds_la5_df['mds_3d_x']=mds_la5_df['mds_3d'].apply(lambda a: a[0]) #take out the 1st coordinate
+mds_la5_df['mds_3d_y']=mds_la5_df['mds_3d'].apply(lambda b: b[1]) #take out the 2nd coordinate
+mds_la5_df['mds_3d_z']=mds_la5_df['mds_3d'].apply(lambda c: c[2]) #take out the 3rd coordinate
+mds_la5_df
+
+#merge the MDS coordinates with our df
+merged_la5_df = merged_la5_df.merge(mds_la5_df, on="sequence_id", how='right')
+merged_la5_df
+#save merged df
+merged_la5_df.to_csv("merged_la5_df.csv")
+
+#create 3D MDS plot
+merged_la5_df = pd.read_csv("merged_la5_df.csv")
+# Create the 3D MDS plot using the color map
+fig = px.scatter_3d(merged_la5_df, x="mds_3d_x", y="mds_3d_y", z="mds_3d_z",  
+                    hover_data=['sequence_id'])
+# Choose camera angles (this is the view that will be used to save the image later)
+camera = dict(
+    eye=dict(x=1.25, y=1.25, z=0.5)
+)
+# Change the appearance of the plot
+fig.update_layout(
+    width=1000,
+    height=700,
+    template='plotly_white',
+    scene=dict(
+        aspectmode='cube'),
+    scene_camera=camera
+)
+# Change the data point size and colour
+fig.update_traces(marker=dict(color='red', size=6))
+# Show the plot
+fig.show()
+
+#Part of the DBLa1.5 Example
+#The below code it used to calculate the percentage of non duplicate amino acid sequences and proportion made up by the most common sequence
+    #The below code was also repeated for DBLa1.6, CIDRg6, DBLg18 and DLBz2 with dataframe names changed as suitable
+    #the number of columns of the "merged_la5_df" give the total number of sequences (n)
+    #the number of columns of the "identical_seq16_a15_df" gives the number of sequences after all duplicates are removed(m)
+    #a simple calculation can be used to calculate the "non-duplicate" percentage: (m / n) * 100
+    #the most common sequence will be listed first, its "count" value divided by the "n" value (number of columns of "merged_1_2df") and multiplied by 100 gives the proportion made up by the most common sequence
+
+identical_seq16_a15_df = merged_la5_df['sequence'].value_counts().reset_index()
+# Rename the columns for clarity
+identical_seq16_a15_df.columns = ['sequence', 'count']
+# Display the result
+print(identical_seq16_a15_df)
 
 
+####CIDRg6 and DBLg18 "Case Study"
+
+identical_seq16_g6_df = pd.DataFrame(identical_seq16_g6_df)
+identical_seq16_g6_df
+g6_value = identical_seq16_g6_df[identical_seq16_g6_df['count'] == 151]['sequence'].iloc[0]
+g6_value
+
+identical_seq16_g18_df = pd.DataFrame(identical_seq16_g18_df)
+identical_seq16_g18_df
+g18_value = identical_seq16_g18_df[identical_seq16_g18_df['count'] == 142]['sequence'].iloc[0]
+g18_value
+
+count6g = filter6g['sequence'].str.contains(g6_value).sum()
+print(count6g)
+count18g = filter6g['sequence'].str.contains(g18_value).sum()
+print(count18g)
+count = ((filter6g['sequence'].str.contains(g6_value)) & (filter6g['sequence'].str.contains(g18_value))).sum()
+print(count)
+
+# Filter the dataset where the 'sequence' column contains both g6_value and g18_value
+filtered_df = filter6g[filter6g['sequence'].str.contains(g6_value) & filter6g['sequence'].str.contains(g18_value)]
+# If no rows match the filter, notify the user
+if filtered_df.empty:
+    print("No matching rows found.")
+else:
+    # Create a new DataFrame with the column 'Both Arc' containing the values from 'Domain arc'
+    output_df = pd.DataFrame(filtered_df['Domain arc']).rename(columns={'Domain arc': 'Both Arc'})
+    # Display the new DataFrame
+    print(output_df)
+
+# Define the string you're looking for
+search_value = 'CIDRg6-DBLg18'
+# Count the number of rows where the 'Both Arc' column contains 'CIDRg6-DBLg18'
+count = output_df['Both Arc'].str.contains(search_value).sum()
+# Print the count
+print(f"Number of rows where 'Both Arc' contains '{search_value}':", count)
+
+# Define the string you're looking for
+search_value = 'CIDRg6-DBLg18'
+# Filter rows where 'Both Arc' does not contain 'CIDRg6-DBLg18'
+rows_without_value = output_df[~output_df['Both Arc'].str.contains(search_value)]
+# Print the rows
+print(rows_without_value)
+
+# 1. Rows where "Both Arc" contains "CIDRg6-DBLg18"
+df_with_value = output_df[output_df['Both Arc'].str.contains(search_value)]
+# 2. Rows where "Both Arc" does not contain "CIDRg6-DBLg18"
+df_without_value = output_df[~output_df['Both Arc'].str.contains(search_value)]
+
+# Print the two DataFrames
+print("DataFrame with rows containing 'CIDRg6-DBLg18':")
+print(df_with_value)
+print("\nDataFrame with rows not containing 'CIDRg6-DBLg18':")
+print(df_without_value)
+
+unique_with_value = df_with_value['Both Arc'].nunique()
+print(f"Number of unique values in 'Both Arc' in df_with_value: {unique_with_value}")
+unique_without_value = df_without_value['Both Arc'].nunique()
+print(f"Number of unique values in 'Both Arc' in df_without_value: {unique_without_value}")
+unique_values_with_value = df_with_value['Both Arc'].unique()
+print("Unique values in 'Both Arc' in df_with_value:")
+print(unique_values_with_value)
+unique_values_without_value = df_without_value['Both Arc'].unique()
+print("\nUnique values in 'Both Arc' in df_without_value:")
+print(unique_values_without_value)
 
 
+####DBLz2 Position in Domain Architecture
 
-
-
-
-
-
-
+for value in arc_df['updated_arc']:
+    if 'DBLz2' in value:
+        print(value)
 
 
 
