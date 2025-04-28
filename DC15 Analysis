@@ -1,4 +1,5 @@
-####Import Python Libraries
+####The below code was conduted using Python in Jupyter Notebooks
+##Import Python Libraries
 
 #essentials
 import pandas as pd
@@ -14,13 +15,14 @@ import Levenshtein as lv
 #for plots
 import plotly.express as px
 #clustering
-from sklearn.manifold import TSNE
 from sklearn.manifold import MDS
 #clustering
 import numpy as np
 #other
 import nbformat
 
+
+####Full-Length (no ATS) PfEMP1 Amino Acid Sequence Analysis
 
 #list all files with the DC15-containing PfEMP1 sequences (they should be fasta files), sequences are that of full-length proteins apart from the Acidic Terminal Segment
 fasta_files = [f for f in os.listdir() if f.endswith('ATS.fasta')] # list comprehension
@@ -85,11 +87,10 @@ plt.savefig("heatmap_clustered.png")
 #Show the plot
 plt.show()
 
-
-###The below code it used to calculate the percentage of non duplicate amino acid sequences 
-#the number of columns of the "identical_seq_df" give the total number of sequences (n)
-#the number of columns of the "identical_seq_counts" gives the number of sequences after all duplicates are removed(m)
-#a simple calculation can be used to calculate the "non-duplicate" percentage: (m / n) * 100
+##The below code it used to calculate the percentage of non duplicate amino acid sequences 
+    #the number of columns of the "identical_seq_df" give the total number of sequences (n)
+    #the number of columns of the "identical_seq_counts" gives the number of sequences after all duplicates are removed(m)
+    #a simple calculation can be used to calculate the "non-duplicate" percentage: (m / n) * 100
 
 identical_seq_counts = dc['sequence'].value_counts().reset_index()
 identical_seq_counts.columns = ['sequence', 'count']
@@ -101,7 +102,7 @@ identical_seq_df
 
 ####Domain-Specific Analysis
 
-#list all files with the singular DC15-associated singular domain sequences (they should be fasta files)
+#list all files with the singular DC15-associated domain sequences (they should be fasta files)
 domain_fasta = [f for f in os.listdir() if f.endswith('subclasses.fasta')] # list comprehension
 domain_fasta
 
@@ -117,8 +118,7 @@ domain_df = pd.concat(all_data_domain, ignore_index=True) #put the table in the 
 domain_df = domain_df.sort_values(by='sequence_id') #sort values by sequence ID
 domain_df
 
-
-##The below analysis was conducted for DBLa1.2, CIDRa1.5 and DBLb6
+###The below analysis was conducted for DBLa1.2, CIDRa1.5 and DBLb6
   #Sequences were extracted as such:
     filter1_2sub = domain_df[domain_df['sequence_id'].str.contains('DBLa1.2', na=False)]
     filter1_5sub = domain_df[domain_df['sequence_id'].str.contains('CIDRa1.5', na=False)]
@@ -171,7 +171,7 @@ merged_1_2df.to_csv("merged_1_2df.csv")
 #create 3D MDS plot
 merged_1_2df = pd.read_csv("merged_1_2df.csv")
 # Create the 3D MDS plot using the color map
-fig = px.scatter_3d(mds1_2sub, x="mds_3d_x", y="mds_3d_y", z="mds_3d_z",  
+fig = px.scatter_3d(merged_1_2df, x="mds_3d_x", y="mds_3d_y", z="mds_3d_z",  
                     hover_data=['sequence_id'])
 # Choose camera angles (this is the view that will be used to save the image later)
 camera = dict(
@@ -192,16 +192,15 @@ fig.update_traces(marker=dict(color='red', size=6))
 fig.show()
 
 ##The below code it used to calculate the percentage of non duplicate amino acid sequences and proportion made up by the most common sequence
-#The below code was also repeated for CIDRa1.5 and DLBb6 with dataframe names changed as suitable
-#the number of columns of the "merged_1_2df" give the total number of sequences (n)
-#the number of columns of the "identical_seq_1_2df" gives the number of sequences after all duplicates are removed(m)
-#a simple calculation can be used to calculate the "non-duplicate" percentage: (m / n) * 100
-#the most common sequence will be listed first, its "count" value divided by the "n" value (number of columns of "merged_1_2df") and multiplied by 100 gives the proportion made up by the most common sequence
+    #The below code was also repeated for CIDRa1.5 and DLBb6 with dataframe names changed as suitable
+    #the number of columns of the "merged_1_2df" give the total number of sequences (n)
+    #the number of columns of the "identical_seq_1_2df" gives the number of sequences after all duplicates are removed(m)
+    #a simple calculation can be used to calculate the "non-duplicate" percentage: (m / n) * 100
+    #the most common sequence will be listed first, its "count" value divided by the "n" value (number of columns of "merged_1_2df") and multiplied by 100 gives the proportion made up by the most common sequence
 
 identical_seq_1_2df = merged_1_2df['sequence'].value_counts().reset_index()
 # Rename the columns for clarity
 identical_seq_1_2df.columns = ['sequence', 'count']
 # Display the result
 print(identical_seq_1_2df)
-
 
