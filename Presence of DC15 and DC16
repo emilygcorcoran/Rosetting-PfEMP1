@@ -1,3 +1,6 @@
+####Proportions of Genomes with DC15, DC16, Both or Neither
+  #code below was conducted in RStudio
+
 install.packages("tidyverse")
 library("tidyverse")
 
@@ -9,9 +12,9 @@ data15 <- read.csv("totaldc15.csv") #metadata file with information pertaining t
 data16 <- read.csv("totaldc16.csv") #metadata file with infromation pertaining to DC16-containing genomes
 allgenomes <- read.csv("all_genomes_metadata_updated.csv") #metadata file pertaining to all genomes, irrespective of whether DC15 or DC16 is present
 
-####Geographical Presence of DCs 15 and 16
+###Geographical Presence of DCs 15 and 16
 
-###Label the Genomes
+##Label the Genomes
 DC15_labelled <- data15 %>%
   mutate(DomainCasette = "DC15") %>%
   select(Genome, Continent, Country, DomainCasette)
@@ -64,7 +67,7 @@ DC_proportions_cleaned <- DC_combine_overlap %>%
 DC_proportions_filtered <- DC_proportions_cleaned %>%
   filter(allgenomesnumber >= 20)
 
-###Create a Dataset that Shows the Proportions of Total Genomes from Each Country that Contain DC15 or DC16 or Both or Neither (DC15DC16_Both_Neither)
+##Create a Dataset that Shows the Proportions of Total Genomes from Each Country that Contain DC15 or DC16 or Both or Neither (DC15DC16_Both_Neither)
 
 # Step 1: Create a reference for each country with the sum of Proportion where Domain_Cassette is "Both", "DC15", or "DC16"
 country_sums <- DC_proportions_filtered %>%
@@ -121,6 +124,7 @@ ggplot(DC15DC16_Both_Neither, aes(x=Country, y=Proportion, fill=Domain_Cassette)
 
 
 ####"Per-Genome" Presence of DCs 15 and 16
+  #code below was conducted in RStudio
   #the code for the below two plots are preliminary to Figure 3b in my report where the information is combined into one stacked bar graph
 
 ##create a bar graph showing the number of times different quantities of DC15 are present in genomes
@@ -189,6 +193,7 @@ ggplot(dc16uniqgen, aes(x=uniqgen16_count, y=count_count)) +
 
 
 ####Code for calculating what proportion of genomes with more than one of a particular domain cassette contain differing domain cassette sequences is below.
+#code below was conducted in Jupyter Notebooks using Python
 #the below code is an example of how it was used on DC15-containing sequences, it was repeated for DC16-containing sequences (with dataframe names chagned as appropriate)
 
 # Load a CSV file into a dataframe and sort by 'Genome'
