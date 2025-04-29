@@ -1,5 +1,5 @@
 ####Proportions of Genomes with DC15, DC16, Both or Neither
-  #code below was conducted in RStudio
+  #code below was conducted in RStudio until stated otherwise
 
 install.packages("tidyverse")
 library("tidyverse")
