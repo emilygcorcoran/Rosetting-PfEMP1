@@ -1,4 +1,4 @@
-####the below code was conducted in Jupyter Notebooks, using Python
+####all of the below code was conducted in Jupyter Notebooks, using Python
 ##import Python Libraries
 #essentials
 import pandas as pd
