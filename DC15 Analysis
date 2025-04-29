@@ -40,7 +40,7 @@ start_df = pd.concat(all_data, ignore_index=True) #put the table in the correct 
 start_df = start_df.sort_values(by='sequence_id') #sort values by sequence ID
 start_df
 
-#create a table for the metadata 
+#create a table for the metadata, replace that which is within the double quotations with your file name (keep the double quotations in the code)
 metadata_df = pd.read_csv("normalised.fulldataset.DC15_metadata_genes.csv").sort_values(by='Sample_ID') 
 metadata_df = metadata_df.rename(columns={'Sample_ID': 'sequence_id'}) #should match the column from start_df
 metadata_df
@@ -52,7 +52,7 @@ df = start_df.merge(metadata_df, on = 'sequence_id',how='inner')
 df.to_csv("dc15meta_and_sequence.csv")
 df
 
-#create a table for the DC architecture, replace that which is within " " with the csv file name
+#create a table for the DC architecture, replace that which is within the double quotations with your file name (keep the double quotations in the code)
 arcdc_df = pd.read_csv("normalised.fulldataset.all_DC15_matched_pattern.csv").sort_values(by='sequence_id') 
 #arcdc_df = arcdc_df.rename(columns={'sequence_id'}) #should match the column from start_df
 arcdc_df
