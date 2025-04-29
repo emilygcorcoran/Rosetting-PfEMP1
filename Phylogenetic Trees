@@ -27,7 +27,7 @@ library(tidytree)
 library(ggnewscale)
 
 
-#### make tree for full length sequences -----------------------------------------------------------------
+#### make tree for amino acid sequences -----------------------------------------------------------------
   #the below was conducted for each of VAR2CSA sequences, DC15-containing PfEMP1 sequences, CIDRg6 sequneces and DBLg18 sequences
 
 #upload previously generated "treefile"
