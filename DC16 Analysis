@@ -24,11 +24,11 @@ import nbformat
 
 ####Full-Length (no ATS) PfEMP1 Amino Acid Sequence Analysis
 
-#create a table for the DC architecture 
+#create a table for the DC16-containing PfEMP1 sequences, their architecture and associated metadata
+#replace that which is within the double quotations with your file name (keep the double quotations in the code)
+#sequences that were fused and those that were incomplete have been filtered out
 dc16filterdf = pd.read_csv("dc16filterdf.csv").sort_values(by='sequence_id') 
-#arcdc_df = arcdc_df.rename(columns={'sequence_id'}) #should match the column from start_df
-dc16filterdf #contained sequences with fused and incomplete filtered out
-
+dc16filterdf 
 
 ###The below analysis was conducted for DC16 sequences that started with DBLa1.5, DBLa1.6-CIDRd and DBLa1.6-CIDRg
   #Sequences were extracted as such:
@@ -187,20 +187,25 @@ print(identical_seq16_a15_df)
 
 ####CIDRg6 and DBLg18 "Case Study"
 
+#create a variable whose value is the most common CIDRg6 sequence
 identical_seq16_g6_df = pd.DataFrame(identical_seq16_g6_df)
 identical_seq16_g6_df
 g6_value = identical_seq16_g6_df[identical_seq16_g6_df['count'] == 151]['sequence'].iloc[0]
 g6_value
 
+#create a variabel whose value is the most common DBLg18 sequence
 identical_seq16_g18_df = pd.DataFrame(identical_seq16_g18_df)
 identical_seq16_g18_df
 g18_value = identical_seq16_g18_df[identical_seq16_g18_df['count'] == 142]['sequence'].iloc[0]
 g18_value
 
+#determine how many times the most common CIDRg6 sequence occurs in the dataset of full-length sequences
 count6g = filter6g['sequence'].str.contains(g6_value).sum()
 print(count6g)
+#determine how many times the most common DBLg18 sequence occurs in the dataset of full-length sequences
 count18g = filter6g['sequence'].str.contains(g18_value).sum()
 print(count18g)
+#determine how many times the most common CIDRg6 sequence *and* the most common DBLg18 sequences both occur within the same protein in the dataset of full-length sequences
 count = ((filter6g['sequence'].str.contains(g6_value)) & (filter6g['sequence'].str.contains(g18_value))).sum()
 print(count)
 
@@ -211,13 +216,15 @@ if filtered_df.empty:
     print("No matching rows found.")
 else:
     # Create a new DataFrame with the column 'Both Arc' containing the values from 'Domain arc'
+    #ie - create a dataframe of domain architectures where the most common CIDRg6 sequence *and* the most common DBLg18 sequences both occur within the same protein
     output_df = pd.DataFrame(filtered_df['Domain arc']).rename(columns={'Domain arc': 'Both Arc'})
     # Display the new DataFrame
     print(output_df)
 
 # Define the string you're looking for
 search_value = 'CIDRg6-DBLg18'
-# Count the number of rows where the 'Both Arc' column contains 'CIDRg6-DBLg18'
+# Count the number of rows where the 'Both Arc' column contains 'CIDRg6-DBLg18' 
+#how many times does the most common CIDRg6 sequence *and* the most common DBLg18 sequences occur *next to each other* within the same protein
 count = output_df['Both Arc'].str.contains(search_value).sum()
 # Print the count
 print(f"Number of rows where 'Both Arc' contains '{search_value}':", count)
@@ -225,13 +232,16 @@ print(f"Number of rows where 'Both Arc' contains '{search_value}':", count)
 # Define the string you're looking for
 search_value = 'CIDRg6-DBLg18'
 # Filter rows where 'Both Arc' does not contain 'CIDRg6-DBLg18'
+#print domain architectures when the most common CIDRg6 sequence *and* the most common DBLg18 sequences don't occur next to each other in the same protein
 rows_without_value = output_df[~output_df['Both Arc'].str.contains(search_value)]
 # Print the rows
 print(rows_without_value)
 
-# 1. Rows where "Both Arc" contains "CIDRg6-DBLg18"
+# 1. Rows where "Both Arc" contains "CIDRg6-DBLg18" 
+#print domain architectures where the most common CIDRg6 sequence *and* the most common DBLg18 sequences occur *next to each other* in the same protein
 df_with_value = output_df[output_df['Both Arc'].str.contains(search_value)]
 # 2. Rows where "Both Arc" does not contain "CIDRg6-DBLg18"
+#print domain architectures when the most common CIDRg6 sequence *and* the most common DBLg18 sequences don't occur next to each other in the same protein
 df_without_value = output_df[~output_df['Both Arc'].str.contains(search_value)]
 
 # Print the two DataFrames
@@ -240,10 +250,13 @@ print(df_with_value)
 print("\nDataFrame with rows not containing 'CIDRg6-DBLg18':")
 print(df_without_value)
 
+#how many unique domain architectures are there when the most common CIDRg6 and DBLg18 sequences are next to each other or not?
 unique_with_value = df_with_value['Both Arc'].nunique()
 print(f"Number of unique values in 'Both Arc' in df_with_value: {unique_with_value}")
 unique_without_value = df_without_value['Both Arc'].nunique()
 print(f"Number of unique values in 'Both Arc' in df_without_value: {unique_without_value}")
+
+#what are the unique domain architectures when the most common CIDRg6 and DBLg18 sequences are next to each other or not?
 unique_values_with_value = df_with_value['Both Arc'].unique()
 print("Unique values in 'Both Arc' in df_with_value:")
 print(unique_values_with_value)
@@ -254,10 +267,7 @@ print(unique_values_without_value)
 
 ####DBLz2 Position in Domain Architecture
 
+#replace that which is within the single quotations marks with the name of the dataset containing sequences, metadata and associated archictectures
 for value in arc_df['updated_arc']:
     if 'DBLz2' in value:
         print(value)
-
-
-
-
