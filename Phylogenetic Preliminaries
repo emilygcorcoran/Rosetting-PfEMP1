@@ -6,6 +6,7 @@
 ##this code was run in Jupyter Notebooks using Python
 
 #create fasta file based on sequences (use merged_df)
+#replace "mds16_g6sub" with the relevant dataframe (df) from which you wish to extract sequences and sequences IDs
 with open ('CIDRg6.fasta', 'w') as file:
     for seq_id, seq in zip(mds16_g6sub['sequence_id'], mds16_g6sub['sequence']):
         file.write(f'>{seq_id}\n{seq}\n')
