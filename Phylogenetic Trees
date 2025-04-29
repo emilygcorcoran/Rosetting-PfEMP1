@@ -30,7 +30,7 @@ library(ggnewscale)
 #### make tree for amino acid sequences -----------------------------------------------------------------
   #the below was conducted for each of VAR2CSA sequences, DC15-containing PfEMP1 sequences, CIDRg6 sequneces and DBLg18 sequences
 
-#upload previously generated "treefile"
+#upload previously generated "treefile" - see "Phylogenetic Preliminaries"
 pfemp1_v2tree <-
   read.newick(
     "VAR2CSA.aligned.fasta.treefile") #insert the name of the preliminary file for relevant sequences
@@ -159,7 +159,7 @@ adj_v2phylo +
     grid.params=list(alpha = 0),
     position = position_identityx(hexpand = 2.1)) +
   
-  #Apply the custom color scale for Subtype
+  #Apply the custom color scale for Countries
   scale_fill_manual(values = country_colours) +
   
   #customise legend
@@ -188,7 +188,7 @@ adj_v2phylo +
     grid.params=list(alpha = 0),
     position = position_identityx(hexpand = 2.1)) +
   
-  # Apply the custom color scale for Country
+  # Apply the custom color scale for Continents
   scale_fill_manual(values = continent_colours) +
   
   #customise legend
