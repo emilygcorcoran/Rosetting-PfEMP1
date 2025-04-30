@@ -124,7 +124,7 @@ plt.show()
   #the 3D coordinates must be indicates prior to running the below code - as indicated by "mds_3d" (see "DC15 Analysis")
   #3D coordinates for all domains cannot be run all at once before running the below code, must run  after the previous domain's stress and r-squared has been calculated
 
-##Stress
+##Stress (ie - computational stress of generating the 3D MDS plot from the Levenshtein matrix)
 
 stress = mds_3d.stress_
 lev_1_2matrix = np.array(lev_1_2matrix)  # Make sure it's a numpy array
